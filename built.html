@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday!</title>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: #fff;
+    position: relative;
+  }
+
+  @keyframes gradientBG {
+    0% {background-position:0% 50%}
+    50% {background-position:100% 50%}
+    100% {background-position:0% 50%}
+  }
+
+  h1 {
+    margin-top: 50px;
+    font-size: 3.5em;
+    text-align: center;
+    color: #ffd700;
+    text-shadow: 0 0 10px #fff, 0 0 20px #ffd700;
+    animation: glow 2s infinite alternate;
+    z-index: 1;
+    position: relative;
+  }
+
+  @keyframes glow {
+    0% { text-shadow: 0 0 10px #fff, 0 0 20px #ffd700; }
+    100% { text-shadow: 0 0 20px #fff, 0 0 40px #ffd700; }
+  }
+
+  #message {
+    max-width: 90%;
+    text-align: center;
+    font-size: 1.4em;
+    line-height: 1.6;
+    margin-top: 20px;
+    color: #fffacd;
+    z-index: 1;
+    position: relative;
+    white-space: pre-line;
+    min-height: 100px;
+  }
+
+  #gift {
+    margin-top: 25px;
+    width: 80px;
+    cursor: pointer;
+    transition: transform 0.3s;
+    position: relative;
+    z-index: 1;
+  }
+  #gift:hover { transform: scale(1.2); }
+
+  #celebrateBtn {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 1em;
+    border: none;
+    border-radius: 10px;
+    background-color: #ffd700;
+    color: #1c1c1c;
+    cursor: pointer;
+    font-weight: bold;
+    z-index: 1;
+    position: relative;
+    transition: 0.3s;
+  }
+
+  #celebrateBtn:hover {
+    background-color: #ffc107;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+  }
+
+  /* Responsive text */
+  @media (max-width: 600px) {
+    h1 { font-size: 2.2em; margin-top: 30px; }
+    #message { font-size: 1.1em; }
+    #gift { width: 60px; margin-top: 20px; }
+    #celebrateBtn { font-size: 0.9em; padding: 8px 15px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🎉 Happy Birthday Madam Jiii! 🎉</h1>
+
+<img src="https://cdn-icons-png.flaticon.com/512/3076/3076014.png" id="gift" alt="Gift">
+
+<div id="message"></div>
+
+<button id="celebrateBtn">Celebrate 🎈</button>
+
+<canvas id="fireworksCanvas"></canvas>
+
+<script>
+// Celebrate Button & Typewriter Message
+const celebrateBtn = document.getElementById('celebrateBtn');
+const messageDiv = document.getElementById('message');
+
+const warmMessage = [
+  "Hey Madam Jiii,",
+  "Today is your birthday!",
+  "Celebrate your birthday whenever you want,",
+  "simply send me a message and I will be there for you.",
+  "Once again, Happy Birthday to my crush! 🎂💖✨"
+];
+
+function typeWriterEffect(lines){
+  let currentLine = 0;
+  let currentChar = 0;
+
+  function typeLine() {
+    if(currentLine >= lines.length) return;
+    if(currentChar < lines[currentLine].length){
+      messageDiv.innerHTML += lines[currentLine][currentChar];
+      currentChar++;
+      setTimeout(typeLine, 50);
+    } else {
+      messageDiv.innerHTML += "\n";
+      currentLine++;
+      currentChar = 0;
+      setTimeout(typeLine, 300);
+    }
+  }
+
+  messageDiv.innerHTML = ""; // clear previous
+  typeLine();
+}
+
+// Canvas & Sparkles
+const canvas = document.getElementById('fireworksCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Floating sparkles
+let sparkles = [];
+for(let i=0;i<100;i++){
+  sparkles.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    r: Math.random()*2+1,
+    dx: (Math.random()-0.5)*0.3,
+    dy: (Math.random()-0.5)*0.3
+  });
+}
+
+// Fireworks
+let fireworks = [];
+class Firework {
+  constructor(x, y, color){
+    this.x = x; this.y = y;
+    this.particles = [];
+    for(let i=0;i<50;i++){
+      this.particles.push({
+        x:this.x, y:this.y,
+        dx:(Math.random()-0.5)*6,
+        dy:(Math.random()-0.5)*6,
+        r: Math.random()*2+1,
+        alpha:1,
+        color: color
+      });
+    }
+  }
+  update(){
+    this.particles.forEach(p=>{
+      p.x += p.dx;
+      p.y += p.dy;
+      p.alpha -= 0.015;
+    });
+    this.particles = this.particles.filter(p=>p.alpha>0);
+  }
+  draw(){
+    this.particles.forEach(p=>{
+      ctx.fillStyle = `rgba(${p.color.r},${p.color.g},${p.color.b},${p.alpha})`;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fill();
+    });
+  }
+}
+
+function launchFirework(x,y){
+  const color = {
+    r: Math.floor(Math.random()*255),
+    g: Math.floor(Math.random()*255),
+    b: Math.floor(Math.random()*255)
+  };
+  fireworks.push(new Firework(x||Math.random()*canvas.width, y||Math.random()*canvas.height/2, color));
+}
+
+// Confetti
+let confettiParticles = [];
+
+function createConfetti() {
+  for(let i=0;i<30;i++){
+    confettiParticles.push({
+      x: Math.random()*canvas.width,
+      y: -10,
+      dx: (Math.random()-0.5)*2,
+      dy: Math.random()*2 + 1,
+      color: `hsl(${Math.random()*360},100%,50%)`,
+      r: Math.random()*6+3
+    });
+  }
+}
+
+function drawConfetti(){
+  confettiParticles.forEach((c,i)=>{
+    ctx.beginPath();
+    ctx.arc(c.x,c.y,c.r,0,Math.PI*2);
+    ctx.fillStyle = c.color;
+    ctx.fill();
+    c.x += c.dx;
+    c.y += c.dy;
+    if(c.y>canvas.height) confettiParticles.splice(i,1);
+  });
+}
+
+// Animate everything
+function animate(){
+  ctx.fillStyle = 'rgba(0,0,0,0.15)';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Sparkles
+  sparkles.forEach(s=>{
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.fill();
+    s.x += s.dx; s.y += s.dy;
+    if(s.x>canvas.width) s.x=0;
+    if(s.x<0) s.x=canvas.width;
+    if(s.y>canvas.height) s.y=0;
+    if(s.y<0) s.y=canvas.height;
+  });
+
+  // Fireworks
+  fireworks.forEach(f=>{
+    f.update();
+    f.draw();
+  });
+  fireworks = fireworks.filter(f=>f.particles.length>0);
+
+  // Confetti
+  drawConfetti();
+
+  requestAnimationFrame(animate);
+}
+animate();
+
+// Celebrate button
+celebrateBtn.addEventListener('click', ()=>{
+  typeWriterEffect(warmMessage);
+  createConfetti();
+  for(let i=0;i<5;i++) launchFirework(Math.random()*canvas.width, Math.random()*canvas.height/2);
+});
+
+// Fireworks on gift click
+document.getElementById('gift').addEventListener('click', e=>{
+  for(let i=0;i<5;i++) launchFirework(e.clientX,e.clientY);
+});
+
+// Resize canvas
+window.addEventListener('resize', ()=>{
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
